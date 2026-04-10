@@ -1,0 +1,151 @@
+{
+  "meta": {
+    "name": "LSH Protocol",
+    "specRevision": 2026041003,
+    "wireProtocolMajor": 3,
+    "notes": "Code-only revision. Never transmitted on wire.",
+    "documentation": {
+      "trustedEnvironment": "The protocol assumes a trusted environment and a cooperative broker. There is no built-in authentication, integrity or confidentiality layer on the LSH payloads.",
+      "handshake": [
+        "`lsh-core` sends `BOOT` after configuration has been finalized.",
+        "When MQTT becomes ready, `lsh-esp` sends `BOOT` back to the controller to force a fresh `details + state` re-sync.",
+        "Topology is treated as static between two controller boots. Runtime hot topology changes are intentionally unsupported."
+      ]
+    }
+  },
+  "keys": {
+    "KEY_PAYLOAD": "p",
+    "KEY_PROTOCOL_MAJOR": "v",
+    "KEY_NAME": "n",
+    "KEY_ACTUATORS_ARRAY": "a",
+    "KEY_BUTTONS_ARRAY": "b",
+    "KEY_CORRELATION_ID": "c",
+    "KEY_ID": "i",
+    "KEY_STATE": "s",
+    "KEY_TYPE": "t"
+  },
+  "commands": [
+    {
+      "name": "DEVICE_DETAILS",
+      "value": 1,
+      "description": "Device details payload with handshake-only protocol major."
+    },
+    {
+      "name": "ACTUATORS_STATE",
+      "value": 2,
+      "description": "Bitpacked actuator state payload."
+    },
+    {
+      "name": "NETWORK_CLICK_REQUEST",
+      "value": 3,
+      "description": "Network click request with correlation ID."
+    },
+    {
+      "name": "BOOT",
+      "value": 4,
+      "description": "Boot notification."
+    },
+    {
+      "name": "PING",
+      "cppName": "PING_",
+      "value": 5,
+      "description": "Ping or heartbeat payload."
+    },
+    {
+      "name": "REQUEST_DETAILS",
+      "value": 10,
+      "description": "Request device details."
+    },
+    {
+      "name": "REQUEST_STATE",
+      "value": 11,
+      "description": "Request current state."
+    },
+    {
+      "name": "SET_STATE",
+      "value": 12,
+      "description": "Set all actuators."
+    },
+    {
+      "name": "SET_SINGLE_ACTUATOR",
+      "value": 13,
+      "description": "Set a single actuator."
+    },
+    {
+      "name": "NETWORK_CLICK_ACK",
+      "value": 14,
+      "description": "Acknowledge a network click with correlation ID."
+    },
+    {
+      "name": "FAILOVER",
+      "value": 15,
+      "description": "General failover signal."
+    },
+    {
+      "name": "FAILOVER_CLICK",
+      "value": 16,
+      "description": "Failover for a specific click with correlation ID."
+    },
+    {
+      "name": "NETWORK_CLICK_CONFIRM",
+      "value": 17,
+      "description": "Confirm a network click after ACK using the same correlation ID."
+    },
+    {
+      "name": "SYSTEM_REBOOT",
+      "value": 254,
+      "description": "ESP system reboot command."
+    },
+    {
+      "name": "SYSTEM_RESET",
+      "value": 255,
+      "description": "ESP system reset command."
+    }
+  ],
+  "clickTypes": [
+    {
+      "cppName": "LONG",
+      "tsName": "Long",
+      "value": 1
+    },
+    {
+      "cppName": "SUPER_LONG",
+      "tsName": "SuperLong",
+      "value": 2
+    }
+  ],
+  "tsAliases": {
+    "BOOT_NOTIFICATION": "BOOT",
+    "GENERAL_FAILOVER": "FAILOVER",
+    "REBOOT": "SYSTEM_REBOOT",
+    "RESET": "SYSTEM_RESET"
+  },
+  "staticPayloads": [
+    {
+      "name": "BOOT",
+      "command": "BOOT",
+      "targets": ["core", "esp"]
+    },
+    {
+      "name": "PING",
+      "cppName": "PING_",
+      "command": "PING",
+      "targets": ["core", "esp"]
+    },
+    {
+      "name": "ASK_DETAILS",
+      "command": "REQUEST_DETAILS",
+      "targets": ["esp"]
+    },
+    {
+      "name": "ASK_STATE",
+      "command": "REQUEST_STATE",
+      "targets": ["esp"]
+    },
+    {
+      "name": "GENERAL_FAILOVER",
+      "command": "FAILOVER",
+      "targets": ["esp"]
+    }
+  ]
+}
