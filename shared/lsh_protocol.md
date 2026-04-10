@@ -3,7 +3,7 @@
 This document is auto-generated from `shared/lsh_protocol.json` by `tools/generate_lsh_protocol.py`.
 Do not edit it manually.
 
-- Spec revision: `2026041004`
+- Spec revision: `2026041005`
 - Wire protocol major: `3`
 - Revision note: Code-only revision. Never transmitted on wire.
 - Wire goal: compact payloads with single-character keys and numeric command IDs
@@ -15,7 +15,7 @@ The protocol assumes a trusted environment and a cooperative broker. There is no
 ## Handshake Contract
 
 - `lsh-core` sends `BOOT` after configuration has been finalized.
-- When `lsh-esp` receives `BOOT` from the controller during normal operation, it forwards that payload on the device `misc` topic so Node-RED can request a fresh `details + state` cycle.
+- When `lsh-esp` receives `BOOT` from the controller during normal operation, it reboots immediately and rebuilds its cached model through the normal startup handshake.
 - When MQTT becomes ready, `lsh-esp` sends `BOOT` back to the controller to force a fresh `details + state` re-sync.
 - Topology is treated as static between two controller boots. Runtime hot topology changes are intentionally unsupported.
 

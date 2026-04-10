@@ -1,14 +1,14 @@
 {
   "meta": {
     "name": "LSH Protocol",
-    "specRevision": 2026041004,
+    "specRevision": 2026041005,
     "wireProtocolMajor": 3,
     "notes": "Code-only revision. Never transmitted on wire.",
     "documentation": {
       "trustedEnvironment": "The protocol assumes a trusted environment and a cooperative broker. There is no built-in authentication, integrity or confidentiality layer on the LSH payloads.",
       "handshake": [
         "`lsh-core` sends `BOOT` after configuration has been finalized.",
-        "When `lsh-esp` receives `BOOT` from the controller during normal operation, it forwards that payload on the device `misc` topic so Node-RED can request a fresh `details + state` cycle.",
+        "When `lsh-esp` receives `BOOT` from the controller during normal operation, it reboots immediately and rebuilds its cached model through the normal startup handshake.",
         "When MQTT becomes ready, `lsh-esp` sends `BOOT` back to the controller to force a fresh `details + state` re-sync.",
         "Topology is treated as static between two controller boots. Runtime hot topology changes are intentionally unsupported."
       ],
