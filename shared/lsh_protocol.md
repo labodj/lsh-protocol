@@ -3,7 +3,7 @@
 This document is auto-generated from `shared/lsh_protocol.json` by `tools/generate_lsh_protocol.py`.
 Do not edit it manually.
 
-- Spec revision: `2026041003`
+- Spec revision: `2026041004`
 - Wire protocol major: `3`
 - Revision note: Code-only revision. Never transmitted on wire.
 - Wire goal: compact payloads with single-character keys and numeric command IDs
@@ -15,8 +15,13 @@ The protocol assumes a trusted environment and a cooperative broker. There is no
 ## Handshake Contract
 
 - `lsh-core` sends `BOOT` after configuration has been finalized.
+- When `lsh-esp` receives `BOOT` from the controller during normal operation, it forwards that payload on the device `misc` topic so Node-RED can request a fresh `details + state` cycle.
 - When MQTT becomes ready, `lsh-esp` sends `BOOT` back to the controller to force a fresh `details + state` re-sync.
 - Topology is treated as static between two controller boots. Runtime hot topology changes are intentionally unsupported.
+
+## Wire Constraints
+
+- `i`, `c`, actuator IDs and button IDs are positive 8-bit values. `0` is reserved as a sentinel for missing or invalid fields and must not be used on the wire.
 
 ## JSON Keys
 
@@ -39,7 +44,7 @@ The protocol assumes a trusted environment and a cooperative broker. There is no
 | 1 | `DEVICE_DETAILS` | `DEVICE_DETAILS` | `{"p":1,"v":3,"n":"c1","a":[1,5],"b":[7]}` | Device details payload with handshake-only protocol major. |
 | 2 | `ACTUATORS_STATE` | `ACTUATORS_STATE` | `{"p":2,"s":[90,3]}` | Bitpacked actuator state payload. |
 | 3 | `NETWORK_CLICK_REQUEST` | `NETWORK_CLICK_REQUEST` | `{"p":3,"c":42,"i":7,"t":1}` | Network click request with correlation ID. |
-| 4 | `BOOT` | `BOOT` | `{"p":4}` | Boot notification. |
+| 4 | `BOOT` | `BOOT` | `{"p":4}` | Controller boot notification and re-sync trigger. |
 | 5 | `PING_` | `PING` | `{"p":5}` | Ping or heartbeat payload. |
 | 10 | `REQUEST_DETAILS` | `REQUEST_DETAILS` | `{"p":10}` | Request device details. |
 | 11 | `REQUEST_STATE` | `REQUEST_STATE` | `{"p":11}` | Request current state. |

@@ -123,17 +123,19 @@ class DocumentationSpec:
 
     trusted_environment: str | None
     handshake: tuple[str, ...]
+    constraints: tuple[str, ...]
 
     @classmethod
     def from_dict(cls, raw: object) -> "DocumentationSpec":
         if raw is None:
-            return cls(trusted_environment=None, handshake=())
+            return cls(trusted_environment=None, handshake=(), constraints=())
         if not isinstance(raw, dict):
             raise SpecError("'meta.documentation' must be an object when present.")
 
         return cls(
             trusted_environment=optional_non_empty_string(raw, "trustedEnvironment"),
             handshake=require_optional_string_array(raw, "handshake"),
+            constraints=require_optional_string_array(raw, "constraints"),
         )
 
 
@@ -737,6 +739,12 @@ def render_protocol_markdown(spec: ProtocolSpec, golden_payloads: GoldenPayloads
             f"- {line}" for line in spec.documentation.handshake
         ) + "\n\n"
 
+    constraints_lines = ""
+    if spec.documentation.constraints:
+        constraints_lines = "## Wire Constraints\n\n" + "\n".join(
+            f"- {line}" for line in spec.documentation.constraints
+        ) + "\n\n"
+
     return f"""# {spec.name}
 
 This document is auto-generated from `shared/lsh_protocol.json` by `tools/generate_lsh_protocol.py`.
@@ -747,7 +755,7 @@ Do not edit it manually.
 - Revision note: {spec.notes}
 - Wire goal: compact payloads with single-character keys and numeric command IDs
 
-{trust_lines}{handshake_lines}## JSON Keys
+{trust_lines}{handshake_lines}{constraints_lines}## JSON Keys
 
 | Constant | Wire Key | Meaning |
 | --- | --- | --- |
