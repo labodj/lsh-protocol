@@ -58,6 +58,35 @@ The LSH protocol assumes a trusted environment and a cooperative broker. It does
 3. commit the updated generated artifacts
 4. propagate changes to consumer repositories
 
+## Consumer Integration
+
+Each consumer repository vendors this repo at `vendor/lsh-protocol` via `git subtree`.
+
+Initial add inside a consumer repository:
+
+```bash
+git remote add lsh-protocol git@github.com:labodj/lsh-protocol.git || git remote set-url lsh-protocol git@github.com:labodj/lsh-protocol.git
+git fetch lsh-protocol
+git subtree add --prefix=vendor/lsh-protocol lsh-protocol main --squash
+```
+
+Subsequent updates inside a consumer repository:
+
+```bash
+git remote add lsh-protocol git@github.com:labodj/lsh-protocol.git || git remote set-url lsh-protocol git@github.com:labodj/lsh-protocol.git
+git fetch lsh-protocol
+git subtree pull --prefix=vendor/lsh-protocol lsh-protocol main --squash
+```
+
+After updating the vendored copy, regenerate or verify the target-specific outputs from the consumer itself:
+
+```bash
+python3 tools/update_lsh_protocol.py
+python3 tools/update_lsh_protocol.py --check
+```
+
+The consumer wrappers now default to the vendored subtree only. Local sibling repos are no longer auto-discovered. Use `--protocol-root` or `LSH_PROTOCOL_ROOT` only for explicit manual overrides.
+
 ## Generator Usage
 
 Generate only the human-readable reference inside this repository:
@@ -90,6 +119,21 @@ This repository is intentionally standalone:
 - it does not assume a monorepo layout
 - consumer outputs are emitted only when their target roots are passed explicitly
 - `shared-doc` is the default target when no `--target` is provided
+
+Typical maintainer flow from this repository:
+
+```bash
+python3 tools/generate_lsh_protocol.py
+python3 tools/generate_lsh_protocol.py --check
+python3 tools/generate_lsh_protocol.py \
+  --target shared-doc \
+  --target core \
+  --target esp \
+  --target node-red \
+  --core-root /path/to/lsh-core \
+  --esp-root /path/to/lsh-esp \
+  --node-red-root /path/to/node-red-contrib-lsh-logic
+```
 
 ## Versioning
 
