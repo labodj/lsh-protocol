@@ -28,6 +28,9 @@ GOLDEN_PAYLOADS_PATH = ROOT / "shared" / "lsh_protocol_golden_payloads.json"
 TARGET_CORE = "core"
 TARGET_ESP = "esp"
 VALID_TARGETS = {TARGET_CORE, TARGET_ESP}
+CLI_TARGET_SHARED_DOC = "shared-doc"
+CLI_TARGET_NODE_RED = "node-red"
+VALID_CLI_TARGETS = (CLI_TARGET_SHARED_DOC, TARGET_CORE, TARGET_ESP, CLI_TARGET_NODE_RED)
 CPP_IDENTIFIER_RE = re.compile(r"^[A-Z][A-Z0-9_]*$")
 TS_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
@@ -772,50 +775,111 @@ These payloads are generated as compile-time byte arrays for zero-allocation hot
 """
 
 
-def generated_outputs(spec: ProtocolSpec, golden_payloads: GoldenPayloads) -> list[tuple[Path, str]]:
-    """Return the complete list of generated files and their content."""
+def describe_path(path: Path) -> str:
+    """Return a readable path for logs, preferring relative-to-repo output when possible."""
 
-    return [
-        (
-            ROOT / "shared" / "lsh_protocol.md",
-            render_protocol_markdown(spec, golden_payloads),
-        ),
-        (
-            ROOT / "lsh-core" / "src" / "communication" / "constants" / "protocol.hpp",
-            render_cpp_protocol(spec, "LSHCORE_COMMUNICATION_CONSTANTS_PROTOCOL_HPP"),
-        ),
-        (
-            ROOT / "lsh-core" / "src" / "communication" / "constants" / "static_payloads.hpp",
-            render_cpp_static_payloads(
-                spec,
-                target=TARGET_CORE,
-                header_guard="LSHCORE_COMMUNICATION_CONSTANTS_STATIC_PAYLOADS_HPP",
-                include_directive='#include "../../internal/etl_array.hpp"',
-                array_type="etl::array",
-            ),
-        ),
-        (
-            ROOT / "lsh-esp_bak" / "src" / "constants" / "communicationprotocol.hpp",
-            render_cpp_protocol(spec, "LSHESP_CONSTANTS_COMMUNICATIONPROTOCOL_HPP"),
-        ),
-        (
-            ROOT / "lsh-esp_bak" / "src" / "constants" / "payloads.hpp",
-            render_cpp_static_payloads(
-                spec,
-                target=TARGET_ESP,
-                header_guard="LSHESP_CONSTANTS_PAYLOADS_HPP",
-                include_directive="#include <array>",
-                array_type="std::array",
-            ),
-        ),
-        (
-            ROOT / "node-red-contrib-lsh-logic" / "src" / "generated" / "protocol.ts",
-            render_ts_protocol(spec),
-        ),
-    ]
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
 
 
-def run(check_only: bool) -> int:
+def generated_outputs(
+    spec: ProtocolSpec,
+    golden_payloads: GoldenPayloads,
+    *,
+    selected_targets: Sequence[str],
+    shared_doc_root: Path | None,
+    core_root: Path | None,
+    esp_root: Path | None,
+    node_red_root: Path | None,
+) -> list[tuple[Path, str]]:
+    """Return the generated files requested by the selected targets."""
+
+    outputs: list[tuple[Path, str]] = []
+
+    for target in selected_targets:
+        if target == CLI_TARGET_SHARED_DOC:
+            root = shared_doc_root or ROOT
+            outputs.append(
+                (
+                    root / "shared" / "lsh_protocol.md",
+                    render_protocol_markdown(spec, golden_payloads),
+                )
+            )
+            continue
+
+        if target == TARGET_CORE:
+            if core_root is None:
+                raise SpecError("--core-root is required when target 'core' is selected.")
+            outputs.extend(
+                [
+                    (
+                        core_root / "src" / "communication" / "constants" / "protocol.hpp",
+                        render_cpp_protocol(spec, "LSHCORE_COMMUNICATION_CONSTANTS_PROTOCOL_HPP"),
+                    ),
+                    (
+                        core_root / "src" / "communication" / "constants" / "static_payloads.hpp",
+                        render_cpp_static_payloads(
+                            spec,
+                            target=TARGET_CORE,
+                            header_guard="LSHCORE_COMMUNICATION_CONSTANTS_STATIC_PAYLOADS_HPP",
+                            include_directive='#include "../../internal/etl_array.hpp"',
+                            array_type="etl::array",
+                        ),
+                    ),
+                ]
+            )
+            continue
+
+        if target == TARGET_ESP:
+            if esp_root is None:
+                raise SpecError("--esp-root is required when target 'esp' is selected.")
+            outputs.extend(
+                [
+                    (
+                        esp_root / "src" / "constants" / "communicationprotocol.hpp",
+                        render_cpp_protocol(spec, "LSHESP_CONSTANTS_COMMUNICATIONPROTOCOL_HPP"),
+                    ),
+                    (
+                        esp_root / "src" / "constants" / "payloads.hpp",
+                        render_cpp_static_payloads(
+                            spec,
+                            target=TARGET_ESP,
+                            header_guard="LSHESP_CONSTANTS_PAYLOADS_HPP",
+                            include_directive="#include <array>",
+                            array_type="std::array",
+                        ),
+                    ),
+                ]
+            )
+            continue
+
+        if target == CLI_TARGET_NODE_RED:
+            if node_red_root is None:
+                raise SpecError("--node-red-root is required when target 'node-red' is selected.")
+            outputs.append(
+                (
+                    node_red_root / "src" / "generated" / "protocol.ts",
+                    render_ts_protocol(spec),
+                )
+            )
+            continue
+
+        raise SpecError(f"Unknown target '{target}'. Valid targets: {', '.join(VALID_CLI_TARGETS)}.")
+
+    return outputs
+
+
+def run(
+    *,
+    check_only: bool,
+    selected_targets: Sequence[str],
+    shared_doc_root: Path | None,
+    core_root: Path | None,
+    esp_root: Path | None,
+    node_red_root: Path | None,
+) -> int:
     """Generate the files or verify that generated files are already up to date."""
 
     spec = load_spec()
@@ -823,7 +887,15 @@ def run(check_only: bool) -> int:
     stale_files: list[Path] = []
     updated_files: list[Path] = []
 
-    for path, content in generated_outputs(spec, golden_payloads):
+    for path, content in generated_outputs(
+        spec,
+        golden_payloads,
+        selected_targets=selected_targets,
+        shared_doc_root=shared_doc_root,
+        core_root=core_root,
+        esp_root=esp_root,
+        node_red_root=node_red_root,
+    ):
         if check_only:
             current = path.read_text(encoding="utf-8") if path.exists() else None
             normalized_content = content if content.endswith("\n") else f"{content}\n"
@@ -837,12 +909,12 @@ def run(check_only: bool) -> int:
     if check_only:
         if stale_files:
             for path in stale_files:
-                print(f"stale generated file: {path.relative_to(ROOT)}", file=sys.stderr)
+                print(f"stale generated file: {describe_path(path)}", file=sys.stderr)
             return 1
         return 0
 
     for path in updated_files:
-        print(f"updated {path.relative_to(ROOT)}")
+        print(f"updated {describe_path(path)}")
     if not updated_files:
         print("generated files already up to date")
     return 0
@@ -853,9 +925,35 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
+        "--target",
+        action="append",
+        choices=VALID_CLI_TARGETS,
+        help="generation target to emit; defaults to 'shared-doc' only",
+    )
+    parser.add_argument(
         "--check",
         action="store_true",
         help="fail if any generated file is out of date instead of rewriting it",
+    )
+    parser.add_argument(
+        "--shared-doc-root",
+        type=Path,
+        help="root directory that contains the target shared/ folder for lsh_protocol.md",
+    )
+    parser.add_argument(
+        "--core-root",
+        type=Path,
+        help="root directory of the lsh-core repository",
+    )
+    parser.add_argument(
+        "--esp-root",
+        type=Path,
+        help="root directory of the lsh-esp repository",
+    )
+    parser.add_argument(
+        "--node-red-root",
+        type=Path,
+        help="root directory of the node-red-contrib-lsh-logic repository",
     )
     return parser.parse_args(argv)
 
@@ -864,8 +962,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Program entry point."""
 
     args = parse_args(argv or sys.argv[1:])
+    selected_targets = tuple(args.target or [CLI_TARGET_SHARED_DOC])
     try:
-        return run(check_only=args.check)
+        return run(
+            check_only=args.check,
+            selected_targets=selected_targets,
+            shared_doc_root=args.shared_doc_root.resolve() if args.shared_doc_root else None,
+            core_root=args.core_root.resolve() if args.core_root else None,
+            esp_root=args.esp_root.resolve() if args.esp_root else None,
+            node_red_root=args.node_red_root.resolve() if args.node_red_root else None,
+        )
     except SpecError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
