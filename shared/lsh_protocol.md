@@ -15,9 +15,25 @@ The protocol assumes a trusted environment and a cooperative broker. There is no
 ## Handshake Contract
 
 - `lsh-core` sends `BOOT` after configuration has been finalized.
+- `BOOT` is a re-sync trigger only. It never carries compatibility metadata.
 - When `lsh-esp` receives `BOOT` from the controller during normal operation, it reboots immediately and rebuilds its cached model through the normal startup handshake.
 - When MQTT becomes ready, `lsh-esp` sends `BOOT` back to the controller to force a fresh `details + state` re-sync.
+- After `BOOT`, wire compatibility is checked when the controller sends `DEVICE_DETAILS` with `v = wireProtocolMajor`.
 - Topology is treated as static between two controller boots. Runtime hot topology changes are intentionally unsupported.
+
+## Compatibility Contract
+
+- `DEVICE_DETAILS.v` is the only on-wire compatibility field and is transmitted only during the handshake.
+- Consumers must reject `DEVICE_DETAILS` when `v` does not match their locally compiled `WIRE_PROTOCOL_MAJOR`.
+- If `DEVICE_DETAILS.v` matches, the handshake may continue normally.
+- `specRevision` is documentation and generated-code metadata only. It is never transmitted on wire and must not be used for runtime compatibility decisions.
+
+## Transport Framing
+
+- The logical LSH payload format is transport-agnostic.
+- JSON over serial is newline-delimited.
+- MsgPack over serial is framed with a 16-bit little-endian payload length prefix.
+- MQTT carries raw JSON strings or raw MsgPack payload bytes without the serial framing prefix.
 
 ## Wire Constraints
 
@@ -30,7 +46,7 @@ The protocol assumes a trusted environment and a cooperative broker. There is no
 | Constant | Wire Key | Meaning |
 | --- | --- | --- |
 | `KEY_PAYLOAD` | `p` | Command discriminator. |
-| `KEY_PROTOCOL_MAJOR` | `v` | Handshake-only protocol major. |
+| `KEY_PROTOCOL_MAJOR` | `v` | Handshake-only protocol major used for wire compatibility checks. |
 | `KEY_NAME` | `n` | Device name. |
 | `KEY_ACTUATORS_ARRAY` | `a` | Actuator ID array. |
 | `KEY_BUTTONS_ARRAY` | `b` | Button ID array. |
@@ -43,10 +59,10 @@ The protocol assumes a trusted environment and a cooperative broker. There is no
 
 | Value | C++ | TypeScript | Golden JSON Example | Description |
 | --- | --- | --- | --- | --- |
-| 1 | `DEVICE_DETAILS` | `DEVICE_DETAILS` | `{"p":1,"v":3,"n":"c1","a":[1,5],"b":[7]}` | Device details payload with handshake-only protocol major. |
+| 1 | `DEVICE_DETAILS` | `DEVICE_DETAILS` | `{"p":1,"v":3,"n":"c1","a":[1,5],"b":[7]}` | Device details payload with handshake-only protocol major used for wire compatibility checks. |
 | 2 | `ACTUATORS_STATE` | `ACTUATORS_STATE` | `{"p":2,"s":[90,3]}` | Bitpacked actuator state payload. |
 | 3 | `NETWORK_CLICK_REQUEST` | `NETWORK_CLICK_REQUEST` | `{"p":3,"c":42,"i":7,"t":1}` | Network click request with correlation ID. |
-| 4 | `BOOT` | `BOOT` | `{"p":4}` | Controller boot notification and re-sync trigger. |
+| 4 | `BOOT` | `BOOT` | `{"p":4}` | Controller boot notification and re-sync trigger. Does not carry version metadata. |
 | 5 | `PING_` | `PING` | `{"p":5}` | Ping or heartbeat payload. |
 | 10 | `REQUEST_DETAILS` | `REQUEST_DETAILS` | `{"p":10}` | Request device details. |
 | 11 | `REQUEST_STATE` | `REQUEST_STATE` | `{"p":11}` | Request current state. |

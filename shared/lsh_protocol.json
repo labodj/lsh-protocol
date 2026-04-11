@@ -8,9 +8,23 @@
       "trustedEnvironment": "The protocol assumes a trusted environment and a cooperative broker. There is no built-in authentication, integrity or confidentiality layer on the LSH payloads.",
       "handshake": [
         "`lsh-core` sends `BOOT` after configuration has been finalized.",
+        "`BOOT` is a re-sync trigger only. It never carries compatibility metadata.",
         "When `lsh-esp` receives `BOOT` from the controller during normal operation, it reboots immediately and rebuilds its cached model through the normal startup handshake.",
         "When MQTT becomes ready, `lsh-esp` sends `BOOT` back to the controller to force a fresh `details + state` re-sync.",
+        "After `BOOT`, wire compatibility is checked when the controller sends `DEVICE_DETAILS` with `v = wireProtocolMajor`.",
         "Topology is treated as static between two controller boots. Runtime hot topology changes are intentionally unsupported."
+      ],
+      "compatibility": [
+        "`DEVICE_DETAILS.v` is the only on-wire compatibility field and is transmitted only during the handshake.",
+        "Consumers must reject `DEVICE_DETAILS` when `v` does not match their locally compiled `WIRE_PROTOCOL_MAJOR`.",
+        "If `DEVICE_DETAILS.v` matches, the handshake may continue normally.",
+        "`specRevision` is documentation and generated-code metadata only. It is never transmitted on wire and must not be used for runtime compatibility decisions."
+      ],
+      "transport": [
+        "The logical LSH payload format is transport-agnostic.",
+        "JSON over serial is newline-delimited.",
+        "MsgPack over serial is framed with a 16-bit little-endian payload length prefix.",
+        "MQTT carries raw JSON strings or raw MsgPack payload bytes without the serial framing prefix."
       ],
       "constraints": [
         "`i`, `c`, actuator IDs and button IDs are positive 8-bit values. `0` is reserved as a sentinel for missing or invalid fields and must not be used on the wire.",
@@ -34,7 +48,7 @@
     {
       "name": "DEVICE_DETAILS",
       "value": 1,
-      "description": "Device details payload with handshake-only protocol major."
+      "description": "Device details payload with handshake-only protocol major used for wire compatibility checks."
     },
     {
       "name": "ACTUATORS_STATE",
@@ -49,7 +63,7 @@
     {
       "name": "BOOT",
       "value": 4,
-      "description": "Controller boot notification and re-sync trigger."
+      "description": "Controller boot notification and re-sync trigger. Does not carry version metadata."
     },
     {
       "name": "PING",

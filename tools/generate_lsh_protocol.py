@@ -123,18 +123,28 @@ class DocumentationSpec:
 
     trusted_environment: str | None
     handshake: tuple[str, ...]
+    compatibility: tuple[str, ...]
+    transport: tuple[str, ...]
     constraints: tuple[str, ...]
 
     @classmethod
     def from_dict(cls, raw: object) -> "DocumentationSpec":
         if raw is None:
-            return cls(trusted_environment=None, handshake=(), constraints=())
+            return cls(
+                trusted_environment=None,
+                handshake=(),
+                compatibility=(),
+                transport=(),
+                constraints=(),
+            )
         if not isinstance(raw, dict):
             raise SpecError("'meta.documentation' must be an object when present.")
 
         return cls(
             trusted_environment=optional_non_empty_string(raw, "trustedEnvironment"),
             handshake=require_optional_string_array(raw, "handshake"),
+            compatibility=require_optional_string_array(raw, "compatibility"),
+            transport=require_optional_string_array(raw, "transport"),
             constraints=require_optional_string_array(raw, "constraints"),
         )
 
@@ -522,7 +532,7 @@ def protocol_key_description(key_name: str) -> str:
 
     descriptions = {
         "KEY_PAYLOAD": "Command discriminator.",
-        "KEY_PROTOCOL_MAJOR": "Handshake-only protocol major.",
+        "KEY_PROTOCOL_MAJOR": "Handshake-only protocol major used for wire compatibility checks.",
         "KEY_NAME": "Device name.",
         "KEY_ACTUATORS_ARRAY": "Actuator ID array.",
         "KEY_BUTTONS_ARRAY": "Button ID array.",
@@ -763,6 +773,18 @@ def render_protocol_markdown(spec: ProtocolSpec, golden_payloads: GoldenPayloads
             f"- {line}" for line in spec.documentation.handshake
         ) + "\n\n"
 
+    compatibility_lines = ""
+    if spec.documentation.compatibility:
+        compatibility_lines = "## Compatibility Contract\n\n" + "\n".join(
+            f"- {line}" for line in spec.documentation.compatibility
+        ) + "\n\n"
+
+    transport_lines = ""
+    if spec.documentation.transport:
+        transport_lines = "## Transport Framing\n\n" + "\n".join(
+            f"- {line}" for line in spec.documentation.transport
+        ) + "\n\n"
+
     constraints_lines = ""
     if spec.documentation.constraints:
         constraints_lines = "## Wire Constraints\n\n" + "\n".join(
@@ -779,7 +801,7 @@ Do not edit it manually.
 - Revision note: {spec.notes}
 - Wire goal: compact payloads with single-character keys and numeric command IDs
 
-{trust_lines}{handshake_lines}{constraints_lines}## JSON Keys
+{trust_lines}{handshake_lines}{compatibility_lines}{transport_lines}{constraints_lines}## JSON Keys
 
 | Constant | Wire Key | Meaning |
 | --- | --- | --- |
