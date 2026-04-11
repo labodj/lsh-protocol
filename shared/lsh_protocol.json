@@ -13,7 +13,9 @@
         "Topology is treated as static between two controller boots. Runtime hot topology changes are intentionally unsupported."
       ],
       "constraints": [
-        "`i`, `c`, actuator IDs and button IDs are positive 8-bit values. `0` is reserved as a sentinel for missing or invalid fields and must not be used on the wire."
+        "`i`, `c`, actuator IDs and button IDs are positive 8-bit values. `0` is reserved as a sentinel for missing or invalid fields and must not be used on the wire.",
+        "`SET_SINGLE_ACTUATOR.s` accepts only `0` or `1` on the wire.",
+        "Bridge builds may impose a tighter maximum on `n` via `CONFIG_MAX_NAME_LENGTH` (default `4`). Device names must fit the compiled bridge limit."
       ]
     }
   },

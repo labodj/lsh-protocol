@@ -22,6 +22,8 @@ The protocol assumes a trusted environment and a cooperative broker. There is no
 ## Wire Constraints
 
 - `i`, `c`, actuator IDs and button IDs are positive 8-bit values. `0` is reserved as a sentinel for missing or invalid fields and must not be used on the wire.
+- `SET_SINGLE_ACTUATOR.s` accepts only `0` or `1` on the wire.
+- Bridge builds may impose a tighter maximum on `n` via `CONFIG_MAX_NAME_LENGTH` (default `4`). Device names must fit the compiled bridge limit.
 
 ## JSON Keys
 
@@ -67,6 +69,9 @@ The protocol assumes a trusted environment and a cooperative broker. There is no
 ## Pre-serialized Static Payloads
 
 These payloads are generated as compile-time byte arrays for zero-allocation hot paths.
+JSON static payloads include the newline transport delimiter. MsgPack static payloads
+shown below are the raw logical payload bytes; target-specific firmware headers may
+prepend transport framing bytes when the serial codec requires it.
 
 | Name | Command | C++ Enum | C++ Symbol | Targets | JSON Bytes | MsgPack Bytes |
 | --- | --- | --- | --- | --- | --- | --- |

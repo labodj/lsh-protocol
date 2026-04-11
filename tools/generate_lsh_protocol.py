@@ -469,15 +469,39 @@ def json_static_payload_literal(command_value: int) -> str:
     return ", ".join(char_literal(char) for char in payload)
 
 
-def msgpack_static_payload_literal(command_value: int) -> str:
-    """Render the wire MsgPack bytes for a static `{ "p": value }` payload."""
+def msgpack_static_payload_bytes(command_value: int) -> list[int]:
+    """Build the raw MsgPack payload bytes for a static `{ "p": value }` payload."""
 
     bytes_ = [0x81, 0xA1, 0x70]
     if command_value <= 0x7F:
         bytes_.append(command_value)
     else:
         bytes_.extend([0xCC, command_value])
-    return ", ".join(f"0x{byte:02X}" for byte in bytes_)
+    return bytes_
+
+
+def msgpack_static_payload_literal(command_value: int) -> str:
+    """Render the framed serial MsgPack bytes for a static `{ "p": value }` payload."""
+
+    payload_bytes = msgpack_static_payload_bytes(command_value)
+    framed_bytes = [
+        len(payload_bytes) & 0xFF,
+        (len(payload_bytes) >> 8) & 0xFF,
+        *payload_bytes,
+    ]
+    return ", ".join(f"0x{byte:02X}" for byte in framed_bytes)
+
+
+def msgpack_static_payload_size(command_value: int) -> int:
+    """Return the framed serial MsgPack size for a static payload."""
+
+    return len(msgpack_static_payload_bytes(command_value)) + 2
+
+
+def msgpack_payload_literal(command_value: int) -> str:
+    """Render the raw, unframed MsgPack payload bytes for documentation."""
+
+    return ", ".join(f"0x{byte:02X}" for byte in msgpack_static_payload_bytes(command_value))
 
 
 def markdown_escape(value: str) -> str:
@@ -588,7 +612,7 @@ def render_cpp_static_payloads(
         json_bytes = json_static_payload_literal(command_value)
         msgpack_bytes = msgpack_static_payload_literal(command_value)
         json_size = len(json.dumps({"p": command_value}, separators=(",", ":")) + "\n")
-        msgpack_size = 4 if command_value <= 0x7F else 5
+        msgpack_size = msgpack_static_payload_size(command_value)
 
         payload_lines.append(
             f"    // --- {payload.name} ---\n"
@@ -719,7 +743,7 @@ def render_protocol_markdown(spec: ProtocolSpec, golden_payloads: GoldenPayloads
                 f"`{payload.symbol_name}`",
                 ", ".join(f"`{target}`" for target in payload.targets),
                 f"`{json_static_payload_literal(spec.command_by_name()[payload.command].value)}`",
-                f"`{msgpack_static_payload_literal(spec.command_by_name()[payload.command].value)}`",
+                f"`{msgpack_payload_literal(spec.command_by_name()[payload.command].value)}`",
             )
         )
         + " |"
@@ -776,6 +800,9 @@ Do not edit it manually.
 ## Pre-serialized Static Payloads
 
 These payloads are generated as compile-time byte arrays for zero-allocation hot paths.
+JSON static payloads include the newline transport delimiter. MsgPack static payloads
+shown below are the raw logical payload bytes; target-specific firmware headers may
+prepend transport framing bytes when the serial codec requires it.
 
 | Name | Command | C++ Enum | C++ Symbol | Targets | JSON Bytes | MsgPack Bytes |
 | --- | --- | --- | --- | --- | --- | --- |
