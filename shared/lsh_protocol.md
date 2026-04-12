@@ -3,7 +3,7 @@
 This document is auto-generated from `shared/lsh_protocol.json` by `tools/generate_lsh_protocol.py`.
 Do not edit it manually.
 
-- Spec revision: `2026041005`
+- Spec revision: `2026041201`
 - Wire protocol major: `3`
 - Revision note: Code-only revision. Never transmitted on wire.
 - Wire goal: compact payloads with single-character keys and numeric command IDs
@@ -28,12 +28,12 @@ The protocol assumes a trusted environment and a cooperative broker. There is no
 - If `DEVICE_DETAILS.v` matches, the handshake may continue normally.
 - `specRevision` is documentation and generated-code metadata only. It is never transmitted on wire and must not be used for runtime compatibility decisions.
 
-## Transport Framing
+## Transport Encoding
 
 - The logical LSH payload format is transport-agnostic.
 - JSON over serial is newline-delimited.
-- MsgPack over serial is framed with a 16-bit little-endian payload length prefix.
-- MQTT carries raw JSON strings or raw MsgPack payload bytes without the serial framing prefix.
+- MsgPack over serial uses raw MsgPack payload bytes without extra transport framing.
+- MQTT carries raw JSON strings or raw MsgPack payload bytes.
 
 ## Wire Constraints
 
@@ -86,8 +86,7 @@ The protocol assumes a trusted environment and a cooperative broker. There is no
 
 These payloads are generated as compile-time byte arrays for zero-allocation hot paths.
 JSON static payloads include the newline transport delimiter. MsgPack static payloads
-shown below are the raw logical payload bytes; target-specific firmware headers may
-prepend transport framing bytes when the serial codec requires it.
+shown below are the exact raw bytes emitted on both serial and MQTT transports.
 
 | Name | Command | C++ Enum | C++ Symbol | Targets | JSON Bytes | MsgPack Bytes |
 | --- | --- | --- | --- | --- | --- | --- |

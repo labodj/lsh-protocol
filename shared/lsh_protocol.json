@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "LSH Protocol",
-    "specRevision": 2026041005,
+    "specRevision": 2026041201,
     "wireProtocolMajor": 3,
     "notes": "Code-only revision. Never transmitted on wire.",
     "documentation": {
@@ -23,8 +23,8 @@
       "transport": [
         "The logical LSH payload format is transport-agnostic.",
         "JSON over serial is newline-delimited.",
-        "MsgPack over serial is framed with a 16-bit little-endian payload length prefix.",
-        "MQTT carries raw JSON strings or raw MsgPack payload bytes without the serial framing prefix."
+        "MsgPack over serial uses raw MsgPack payload bytes without extra transport framing.",
+        "MQTT carries raw JSON strings or raw MsgPack payload bytes."
       ],
       "constraints": [
         "`i`, `c`, actuator IDs and button IDs are positive 8-bit values. `0` is reserved as a sentinel for missing or invalid fields and must not be used on the wire.",

@@ -491,21 +491,15 @@ def msgpack_static_payload_bytes(command_value: int) -> list[int]:
 
 
 def msgpack_static_payload_literal(command_value: int) -> str:
-    """Render the framed serial MsgPack bytes for a static `{ "p": value }` payload."""
+    """Render the raw MsgPack bytes for a static `{ "p": value }` payload."""
 
-    payload_bytes = msgpack_static_payload_bytes(command_value)
-    framed_bytes = [
-        len(payload_bytes) & 0xFF,
-        (len(payload_bytes) >> 8) & 0xFF,
-        *payload_bytes,
-    ]
-    return ", ".join(f"0x{byte:02X}" for byte in framed_bytes)
+    return ", ".join(f"0x{byte:02X}" for byte in msgpack_static_payload_bytes(command_value))
 
 
 def msgpack_static_payload_size(command_value: int) -> int:
-    """Return the framed serial MsgPack size for a static payload."""
+    """Return the raw MsgPack size for a static payload."""
 
-    return len(msgpack_static_payload_bytes(command_value)) + 2
+    return len(msgpack_static_payload_bytes(command_value))
 
 
 def msgpack_payload_literal(command_value: int) -> str:
@@ -781,7 +775,7 @@ def render_protocol_markdown(spec: ProtocolSpec, golden_payloads: GoldenPayloads
 
     transport_lines = ""
     if spec.documentation.transport:
-        transport_lines = "## Transport Framing\n\n" + "\n".join(
+        transport_lines = "## Transport Encoding\n\n" + "\n".join(
             f"- {line}" for line in spec.documentation.transport
         ) + "\n\n"
 
@@ -823,8 +817,7 @@ Do not edit it manually.
 
 These payloads are generated as compile-time byte arrays for zero-allocation hot paths.
 JSON static payloads include the newline transport delimiter. MsgPack static payloads
-shown below are the raw logical payload bytes; target-specific firmware headers may
-prepend transport framing bytes when the serial codec requires it.
+shown below are the exact raw bytes emitted on both serial and MQTT transports.
 
 | Name | Command | C++ Enum | C++ Symbol | Targets | JSON Bytes | MsgPack Bytes |
 | --- | --- | --- | --- | --- | --- | --- |

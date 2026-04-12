@@ -72,12 +72,12 @@ Keep these terms distinct:
 
 ## Transport Model
 
-The LSH logical payloads are transport-agnostic. Transport framing is documented here because it affects interoperability between repositories:
+The LSH logical payloads are transport-agnostic. Transport behavior is documented here because it affects interoperability between repositories:
 
 - JSON over serial: newline-delimited
-- MsgPack over serial: 16-bit little-endian length prefix + raw payload
+- MsgPack over serial: raw MsgPack payload
 - MQTT JSON: raw JSON payload
-- MQTT MsgPack: raw MsgPack payload, without the serial framing prefix
+- MQTT MsgPack: raw MsgPack payload
 
 ## Workflow
 
