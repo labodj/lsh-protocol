@@ -5,7 +5,7 @@ Single source of truth for the LSH wire protocol.
 This repository contains the compact protocol specification shared by:
 
 - `lsh-core`
-- `lsh-esp`
+- `lsh-bridge`
 - `node-red-contrib-lsh-logic`
 
 It is responsible for keeping the protocol contract explicit, versioned, and reproducible across firmware and application repositories.
@@ -135,10 +135,10 @@ Generate outputs for consumer repositories explicitly:
 python3 tools/generate_lsh_protocol.py \
   --target shared-doc \
   --target core \
-  --target esp \
+  --target bridge \
   --target node-red \
   --core-root /path/to/lsh-core \
-  --esp-root /path/to/lsh-esp \
+  --bridge-root /path/to/lsh-bridge \
   --node-red-root /path/to/node-red-contrib-lsh-logic
 ```
 
@@ -156,10 +156,10 @@ python3 tools/generate_lsh_protocol.py --check
 python3 tools/generate_lsh_protocol.py \
   --target shared-doc \
   --target core \
-  --target esp \
+  --target bridge \
   --target node-red \
   --core-root /path/to/lsh-core \
-  --esp-root /path/to/lsh-esp \
+  --bridge-root /path/to/lsh-bridge \
   --node-red-root /path/to/node-red-contrib-lsh-logic
 ```
 

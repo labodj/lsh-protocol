@@ -27,10 +27,17 @@ SPEC_PATH = ROOT / "shared" / "lsh_protocol.json"
 GOLDEN_PAYLOADS_PATH = ROOT / "shared" / "lsh_protocol_golden_payloads.json"
 TARGET_CORE = "core"
 TARGET_ESP = "esp"
+CLI_TARGET_BRIDGE = "bridge"
 VALID_TARGETS = {TARGET_CORE, TARGET_ESP}
 CLI_TARGET_SHARED_DOC = "shared-doc"
 CLI_TARGET_NODE_RED = "node-red"
-VALID_CLI_TARGETS = (CLI_TARGET_SHARED_DOC, TARGET_CORE, TARGET_ESP, CLI_TARGET_NODE_RED)
+VALID_CLI_TARGETS = (
+    CLI_TARGET_SHARED_DOC,
+    TARGET_CORE,
+    TARGET_ESP,
+    CLI_TARGET_BRIDGE,
+    CLI_TARGET_NODE_RED,
+)
 CPP_IDENTIFIER_RE = re.compile(r"^[A-Z][A-Z0-9_]*$")
 TS_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
@@ -884,7 +891,9 @@ def generated_outputs(
 
         if target == TARGET_ESP:
             if esp_root is None:
-                raise SpecError("--esp-root is required when target 'esp' is selected.")
+                raise SpecError(
+                    "--bridge-root (legacy --esp-root) is required when target 'bridge'/'esp' is selected."
+                )
             outputs.extend(
                 [
                     (
@@ -919,6 +928,21 @@ def generated_outputs(
         raise SpecError(f"Unknown target '{target}'. Valid targets: {', '.join(VALID_CLI_TARGETS)}.")
 
     return outputs
+
+
+def normalize_cli_targets(selected_targets: Sequence[str]) -> tuple[str, ...]:
+    """Map user-facing aliases to generator targets and remove duplicates."""
+
+    normalized: list[str] = []
+    seen: set[str] = set()
+
+    for target in selected_targets:
+        mapped = TARGET_ESP if target == CLI_TARGET_BRIDGE else target
+        if mapped not in seen:
+            normalized.append(mapped)
+            seen.add(mapped)
+
+    return tuple(normalized)
 
 
 def run(
@@ -978,7 +1002,7 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         "--target",
         action="append",
         choices=VALID_CLI_TARGETS,
-        help="generation target to emit; defaults to 'shared-doc' only",
+        help="generation target to emit; 'bridge' is the public alias of the legacy 'esp' target",
     )
     parser.add_argument(
         "--check",
@@ -997,8 +1021,10 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--esp-root",
+        "--bridge-root",
+        dest="esp_root",
         type=Path,
-        help="root directory of the lsh-esp repository",
+        help="root directory of the lsh-bridge repository; legacy --esp-root alias is still supported",
     )
     parser.add_argument(
         "--node-red-root",
@@ -1012,7 +1038,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Program entry point."""
 
     args = parse_args(argv or sys.argv[1:])
-    selected_targets = tuple(args.target or [CLI_TARGET_SHARED_DOC])
+    selected_targets = normalize_cli_targets(tuple(args.target or [CLI_TARGET_SHARED_DOC]))
     try:
         return run(
             check_only=args.check,

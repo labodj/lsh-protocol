@@ -16,8 +16,8 @@ The protocol assumes a trusted environment and a cooperative broker. There is no
 
 - `lsh-core` sends `BOOT` after configuration has been finalized.
 - `BOOT` is a re-sync trigger only. It never carries compatibility metadata.
-- When `lsh-esp` receives `BOOT` from the controller during normal operation, it reboots immediately and rebuilds its cached model through the normal startup handshake.
-- When MQTT becomes ready, `lsh-esp` sends `BOOT` back to the controller to force a fresh `details + state` re-sync.
+- When `lsh-bridge` receives `BOOT` from the controller during normal operation, it reboots immediately and rebuilds its cached model through the normal startup handshake.
+- When MQTT becomes ready, `lsh-bridge` sends `BOOT` back to the controller to force a fresh `details + state` re-sync.
 - After `BOOT`, wire compatibility is checked when the controller sends `DEVICE_DETAILS` with `v = wireProtocolMajor`.
 - Topology is treated as static between two controller boots. Runtime hot topology changes are intentionally unsupported.
 
