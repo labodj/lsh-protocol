@@ -519,6 +519,14 @@ def markdown_escape(value: str) -> str:
     return value.replace("|", r"\|")
 
 
+def markdown_code_span(value: str) -> str:
+    """Render inline code spans compatibly with older Doxygen Markdown parsers."""
+
+    if "'" in value or "`" in value:
+        return f"``{value}``"
+    return f"`{value}`"
+
+
 def lower_camel_case(identifier: str) -> str:
     """Convert an upper-snake identifier to lowerCamelCase."""
 
@@ -745,8 +753,8 @@ def render_protocol_markdown(spec: ProtocolSpec, golden_payloads: GoldenPayloads
         "| "
         + " | ".join(
             (
-                f"`{name}`",
-                f"`{value}`",
+                markdown_code_span(name),
+                markdown_code_span(value),
                 markdown_escape(protocol_key_description(name)),
             )
         )
@@ -757,14 +765,18 @@ def render_protocol_markdown(spec: ProtocolSpec, golden_payloads: GoldenPayloads
     command_rows: list[str] = []
     for command in spec.commands:
         example = golden_payloads.payloads.get(lower_camel_case(command.name))
-        json_example = f"`{json.dumps(example, separators=(',', ':'))}`" if example is not None else ""
+        json_example = (
+            markdown_code_span(json.dumps(example, separators=(",", ":")))
+            if example is not None
+            else ""
+        )
         command_rows.append(
             "| "
             + " | ".join(
                 (
                     str(command.value),
-                    f"`{command.cpp_name}`",
-                    f"`{command.ts_name}`",
+                    markdown_code_span(command.cpp_name),
+                    markdown_code_span(command.ts_name),
                     json_example,
                     markdown_escape(command.description),
                 )
@@ -774,7 +786,13 @@ def render_protocol_markdown(spec: ProtocolSpec, golden_payloads: GoldenPayloads
 
     click_rows = "\n".join(
         "| "
-        + " | ".join((str(click_type.value), f"`{click_type.cpp_name}`", f"`{click_type.ts_name}`"))
+        + " | ".join(
+            (
+                str(click_type.value),
+                markdown_code_span(click_type.cpp_name),
+                markdown_code_span(click_type.ts_name),
+            )
+        )
         + " |"
         for click_type in spec.click_types
     )
@@ -783,13 +801,17 @@ def render_protocol_markdown(spec: ProtocolSpec, golden_payloads: GoldenPayloads
         "| "
         + " | ".join(
             (
-                f"`{payload.name}`",
-                f"`{payload.command}`",
-                f"`{payload.cpp_name}`",
-                f"`{payload.symbol_name}`",
-                ", ".join(f"`{target}`" for target in payload.targets),
-                f"`{json_static_payload_literal(spec.command_by_name()[payload.command].value)}`",
-                f"`{msgpack_payload_literal(spec.command_by_name()[payload.command].value)}`",
+                markdown_code_span(payload.name),
+                markdown_code_span(payload.command),
+                markdown_code_span(payload.cpp_name),
+                markdown_code_span(payload.symbol_name),
+                ", ".join(markdown_code_span(target) for target in payload.targets),
+                markdown_code_span(
+                    json_static_payload_literal(spec.command_by_name()[payload.command].value)
+                ),
+                markdown_code_span(
+                    msgpack_payload_literal(spec.command_by_name()[payload.command].value)
+                ),
             )
         )
         + " |"
