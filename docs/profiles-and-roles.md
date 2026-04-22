@@ -6,6 +6,11 @@ The generated file [shared/lsh_protocol.md](../shared/lsh_protocol.md) is the
 authoritative wire reference. This guide explains how to _reason_ about the
 protocol so it stays easy to implement even outside the original LSH stack.
 
+Use this page when you need semantic guidance such as "is this hop-local or
+end-to-end?" or "which peer is authoritative here?". If you need the exact wire
+keys, command IDs and golden payloads, go straight to
+[shared/lsh_protocol.md](../shared/lsh_protocol.md).
+
 ## Read This First
 
 The base LSH protocol is:
@@ -168,6 +173,15 @@ become ambiguous.
 
 The current public LSH stack can be described like this:
 
+For the cross-repo walkthrough of this concrete profile, including the current
+topic model and startup flow, see the landing page:
+https://github.com/labodj/labo-smart-home/blob/main/REFERENCE_STACK.md
+
+For quick adoption answers and first-lab diagnosis around that public stack, see
+also:
+https://github.com/labodj/labo-smart-home/blob/main/FAQ.md
+https://github.com/labodj/labo-smart-home/blob/main/TROUBLESHOOTING.md
+
 - `lsh-core`: authoritative serial-side controller
 - `lsh-bridge`: adapter between serial LSH and MQTT/Homie
 - `node-red-contrib-lsh-logic`: orchestrator and automation peer on MQTT
@@ -229,3 +243,10 @@ When implementing LSH from scratch:
 2. understand the roles in this document
 3. define your own profile before writing code
 4. only then map the protocol onto your chosen transports and cache behavior
+
+## Read Next
+
+- Exact generated wire contract: [../shared/lsh_protocol.md](../shared/lsh_protocol.md)
+- Protocol repo overview: [../README.md](../README.md)
+- Public reference stack walkthrough: <https://github.com/labodj/labo-smart-home/blob/main/REFERENCE_STACK.md>
+- Adoption FAQ: <https://github.com/labodj/labo-smart-home/blob/main/FAQ.md>

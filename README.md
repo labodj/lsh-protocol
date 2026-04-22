@@ -1,6 +1,18 @@
+[![Build Status](https://github.com/labodj/lsh-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/labodj/lsh-protocol/actions/workflows/ci.yml)
+[![Latest Release](https://img.shields.io/github/v/release/labodj/lsh-protocol?display_name=tag&sort=semver)](https://github.com/labodj/lsh-protocol/releases/latest)
 # LSH Protocol
 
 Single source of truth for the LSH wire protocol.
+
+The `main` branch may move ahead between tagged releases. If you are integrating
+LSH from outside the coordinated public repositories, prefer released tags over
+`main` so your vendored copy stays reproducible.
+
+If you want the concrete public MQTT/Homie/Node-RED profile implemented by the
+current repositories, start with the landing reference page:
+
+- [LSH reference stack](https://github.com/labodj/labo-smart-home/blob/main/REFERENCE_STACK.md)
+- [LSH glossary](https://github.com/labodj/labo-smart-home/blob/main/GLOSSARY.md)
 
 This repository contains the compact protocol specification shared by:
 
@@ -14,6 +26,20 @@ If you want to implement the protocol from scratch, read the docs in this order:
 
 1. [shared/lsh_protocol.md](./shared/lsh_protocol.md) for the generated wire contract
 2. [docs/profiles-and-roles.md](./docs/profiles-and-roles.md) for the role model, hop-local semantics and implementation guidance
+
+The landing reference page above describes how the current public repositories
+apply that protocol as one concrete stack profile. This repo stays focused on
+the contract itself and the role-oriented semantics behind it.
+
+## Start Here
+
+Use this repository according to the question you are trying to answer:
+
+- If you want the exact payload shapes, command IDs and wire keys, read [shared/lsh_protocol.md](./shared/lsh_protocol.md).
+- If you want to understand the meaning of `BOOT`, `PING`, roles and profiles, read [docs/profiles-and-roles.md](./docs/profiles-and-roles.md).
+- If you are still deciding whether the public stack fits your use case, skim the landing [FAQ](https://github.com/labodj/labo-smart-home/blob/main/FAQ.md).
+- If you want to maintain vendored copies inside consumer repositories, jump to [Consumer Integration](#consumer-integration).
+- If you only want to understand the current public stack behavior, go back to the landing [reference stack](https://github.com/labodj/labo-smart-home/blob/main/REFERENCE_STACK.md) first.
 
 ## Contents
 
@@ -119,15 +145,24 @@ The hand-written guide in [docs/profiles-and-roles.md](./docs/profiles-and-roles
 
 Each consumer repository vendors this repo at `vendor/lsh-protocol` via `git subtree`.
 
-Initial add inside a consumer repository:
+For stable third-party integrations, vendor a released tag:
 
 ```bash
 git remote add lsh-protocol git@github.com:labodj/lsh-protocol.git || git remote set-url lsh-protocol git@github.com:labodj/lsh-protocol.git
 git fetch lsh-protocol
-git subtree add --prefix=vendor/lsh-protocol lsh-protocol main --squash
+git subtree add --prefix=vendor/lsh-protocol lsh-protocol <tag> --squash
 ```
 
-Subsequent updates inside a consumer repository:
+Subsequent stable updates:
+
+```bash
+git remote add lsh-protocol git@github.com:labodj/lsh-protocol.git || git remote set-url lsh-protocol git@github.com:labodj/lsh-protocol.git
+git fetch lsh-protocol
+git subtree pull --prefix=vendor/lsh-protocol lsh-protocol <tag> --squash
+```
+
+Use `main` only when you are intentionally coordinating unreleased protocol work
+across multiple LSH repositories:
 
 ```bash
 git remote add lsh-protocol git@github.com:labodj/lsh-protocol.git || git remote set-url lsh-protocol git@github.com:labodj/lsh-protocol.git
