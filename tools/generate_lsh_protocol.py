@@ -680,7 +680,7 @@ namespace {cpp_namespace}
 {{
     namespace protocol
     {{
-        inline constexpr uint32_t SPEC_REVISION = {spec.spec_revision}U; //!< Code-only revision, never transmitted on wire.
+        inline constexpr uint32_t SPEC_REVISION = {spec.spec_revision}U; //!< Metadata-only revision, never transmitted on wire.
         inline constexpr uint8_t WIRE_PROTOCOL_MAJOR = {spec.wire_protocol_major}U; //!< Handshake-only protocol major, transmitted only in DEVICE_DETAILS.
 
         // === JSON KEYS ===
