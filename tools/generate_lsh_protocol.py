@@ -623,7 +623,7 @@ def protocol_key_description(key_name: str) -> str:
         "KEY_BUTTONS_ARRAY": "Button ID array.",
         "KEY_CORRELATION_ID": "Click correlation ID.",
         "KEY_ID": "Numeric actuator or button ID.",
-        "KEY_STATE": "Actuator state or bitpacked state bytes.",
+        "KEY_STATE": "Actuator state or bit-packed state bytes.",
         "KEY_TYPE": "Click type discriminator.",
     }
     return descriptions.get(key_name, "")
