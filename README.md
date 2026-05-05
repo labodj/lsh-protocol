@@ -46,6 +46,8 @@ For a practical reading path:
   bridge, gateway, or coordinator;
 - keep [the generated reference](./shared/lsh_protocol.md) open when writing
   encoders, decoders, tests, or generated constants;
+- use [the generated JSON Schema](./shared/lsh_protocol.schema.json) when
+  validating payload fixtures or external integrations;
 - use the
   [LSH reference stack](https://github.com/labodj/labo-smart-home/blob/main/REFERENCE_STACK.md)
   for the current public MQTT/Homie orchestration profile.
@@ -58,6 +60,12 @@ For a practical reading path:
   Human-readable golden examples used by tests, generated docs, and consumers.
 - `shared/lsh_protocol.md`
   Generated reference documentation. Do not edit it by hand.
+- `shared/lsh_protocol.schema.json`
+  Generated JSON Schema for base protocol payload validation. Do not edit it by
+  hand.
+- `shared/lsh_protocol_manifest.json`
+  Generated drift manifest containing input, shared artifact, and expected
+  consumer artifact SHA-256 hashes. Do not edit it by hand.
 - `DOCS.md`
   The documentation map for this repository.
 - `docs/profiles-and-roles.md`
@@ -187,11 +195,21 @@ Generate the shared Markdown reference in this repository:
 python3 tools/generate_lsh_protocol.py
 ```
 
+The default `shared-doc` target writes these generated files:
+
+- `shared/lsh_protocol.md`
+- `shared/lsh_protocol.schema.json`
+- `shared/lsh_protocol_manifest.json`
+
 Check that generated files are up to date:
 
 ```bash
 python3 tools/generate_lsh_protocol.py --check
 ```
+
+CI also checks generated protocol files in the public consumer repositories
+(`lsh-core`, `lsh-bridge`, and `labo-smart-home-coordinator`) and verifies their
+hashes against `shared/lsh_protocol_manifest.json`.
 
 Generate outputs for the public consumers:
 
@@ -230,10 +248,12 @@ When the wire contract changes:
 2. Update `shared/lsh_protocol_golden_payloads.json` if examples changed.
 3. Run `python3 tools/generate_lsh_protocol.py`.
 4. Run `python3 tools/generate_lsh_protocol.py --check`.
-5. Propagate the vendored protocol copy into consumer repositories.
-6. Run each consumer's protocol update/check command.
-7. Commit the spec, generated docs, and consumer-generated outputs together in
-   the appropriate repositories.
+5. Confirm the manifest changed only because the spec, golden examples, shared
+   artifacts, or expected consumer artifacts changed.
+6. Propagate the vendored protocol copy into consumer repositories.
+7. Run each consumer's protocol update/check command.
+8. Commit the spec, generated docs, schema, manifest, and consumer-generated
+   outputs together in the appropriate repositories.
 
 ## Versioning
 
