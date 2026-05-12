@@ -9,7 +9,7 @@
     {
       "consumer": "lsh-core",
       "path": "lsh-core/src/communication/constants/transport.hpp",
-      "sha256": "4d66483f7fe3d52c1ac870cd570c5d973a77de8da43280754bf2401b63203b20",
+      "sha256": "a81a0f9985ebaa09338008a0e3b6c123a8cb7e68a300111956ba4b1ad015e2c6",
       "target": "core"
     },
     {
@@ -27,7 +27,7 @@
     {
       "consumer": "lsh-bridge",
       "path": "lsh-bridge/src/constants/transport.hpp",
-      "sha256": "930b355aee5ff8f63964eac7c65b6b912af0a834cfe31d2a5e6ed6dd8446e599",
+      "sha256": "8e533cd00ab14079fa365fd5f4aa642f667e5419ce14099e6375d21b456e5530",
       "target": "bridge"
     },
     {
